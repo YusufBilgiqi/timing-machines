@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timing Machines &amp; Amplitude Diagnosis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c0f;
+  --surface:#0c1318;
+  --card:#111c24;
+  --card2:#162230;
+  --border:rgba(60,140,200,.08);
+  --border2:rgba(60,140,200,.16);
+  --bright:#eaf2f8;
+  --text:#c8d8e4;
+  --sub:#7a9db8;
+  --dim:#3e6880;
+  --steel:#4a9dc8;
+  --steel-dim:rgba(74,157,200,.10);
+  --steel-mid:rgba(74,157,200,.20);
+  --gold:#c8a040;
+  --gold-dim:rgba(200,160,64,.10);
+  --sage:#50a870;
+  --sage-dim:rgba(80,168,112,.10);
+  --rose:#c85060;
+  --rose-dim:rgba(200,80,96,.10);
+  --amber:#d08830;
+  --amber-dim:rgba(208,136,48,.10);
+  --sw:272px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Cormorant Garamond',serif;font-weight:300;font-size:16px;line-height:1.78;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 30% at 50% -5%,rgba(74,157,200,.06) 0%,transparent 65%);pointer-events:none;z-index:0;}
+.app{display:grid;grid-template-columns:var(--sw) 1fr;height:100vh;overflow:hidden;position:relative;z-index:1;}
+
+.sidebar{background:var(--surface);border-right:1px solid var(--border2);display:flex;flex-direction:column;overflow:hidden;}
+.sb-head{padding:22px 18px 0;flex-shrink:0;}
+.sb-icon{width:24px;height:24px;margin-bottom:10px;background:linear-gradient(135deg,var(--steel) 0%,#1a5880 60%,#0a2840 100%);border-radius:50%;box-shadow:0 0 10px rgba(74,157,200,.3);display:flex;align-items:center;justify-content:center;}
+.sb-icon::after{content:'◉';color:rgba(255,255,255,.7);font-size:11px;}
+.sb-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--bright);line-height:1.3;letter-spacing:.4px;margin-bottom:3px;}
+.sb-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;line-height:1.6;}
+.sb-rule{height:1px;background:linear-gradient(90deg,var(--steel-mid),transparent);margin:14px 0 6px;}
+.sb-nav{flex:1;overflow-y:auto;padding:0 10px 12px;}
+.sb-nav::-webkit-scrollbar{width:2px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(74,157,200,.25);}
+.sb-grp{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--steel);padding:14px 8px 5px;}
+.sb-item{padding:7px 10px;border-radius:3px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:13.5px;color:var(--sub);display:flex;align-items:flex-start;gap:8px;transition:all .13s;line-height:1.35;}
+.sb-item:hover{background:var(--steel-dim);color:var(--text);}
+.sb-item.active{background:var(--steel-mid);color:var(--bright);font-weight:600;}
+.sb-n{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--dim);flex-shrink:0;margin-top:2px;}
+.sb-item.active .sb-n{color:var(--steel);}
+.sb-foot{padding:12px 18px;border-top:1px solid var(--border2);flex-shrink:0;}
+.sb-foot p{font-size:10px;color:var(--sub);line-height:1.7;font-family:'DM Mono',monospace;}
+
+.main{overflow-y:auto;}
+.main::-webkit-scrollbar{width:3px;}
+.main::-webkit-scrollbar-thumb{background:rgba(74,157,200,.18);}
+.panel{display:none;padding:38px 46px 70px;max-width:880px;}
+.panel.active{display:block;}
+
+.ph{margin-bottom:28px;}
+.ph-eye{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--steel);margin-bottom:12px;}
+.ph h1{font-family:'Cinzel',serif;font-size:30px;font-weight:700;color:var(--bright);line-height:1.1;margin-bottom:10px;letter-spacing:.4px;}
+.ph h1 em{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;color:var(--steel);font-size:32px;}
+.ph p{font-size:15.5px;color:var(--text);max-width:630px;line-height:1.82;}
+.ph-rule{height:1px;background:linear-gradient(90deg,rgba(74,157,200,.4),rgba(200,160,64,.12),transparent);margin-top:22px;}
+
+.sdiv{display:flex;align-items:center;gap:12px;margin:28px 0 14px;}
+.sdiv-tag{font-family:'DM Mono',monospace;font-size:7.5px;background:var(--steel-dim);color:var(--steel);border:1px solid rgba(74,157,200,.22);border-radius:2px;padding:2px 7px;flex-shrink:0;letter-spacing:2px;text-transform:uppercase;}
+.sdiv-tag.gold{background:var(--gold-dim);color:var(--gold);border-color:rgba(200,160,64,.22);}
+.sdiv-tag.rose{background:var(--rose-dim);color:var(--rose);border-color:rgba(200,80,96,.22);}
+.sdiv-tag.sage{background:var(--sage-dim);color:var(--sage);border-color:rgba(80,168,112,.22);}
+.sdiv-line{flex:1;height:1px;background:var(--border2);}
+.sdiv-text{font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);flex-shrink:0;}
+
+.prose{font-size:15.5px;color:var(--text);line-height:1.85;margin:10px 0;}
+.prose strong{color:var(--bright);font-weight:600;}
+
+.callout{border-left:2px solid var(--steel);padding:12px 16px;background:var(--steel-dim);border-radius:0 4px 4px 0;margin:12px 0;font-size:14.5px;color:var(--text);line-height:1.78;}
+.callout.gold{border-color:var(--gold);background:var(--gold-dim);}
+.callout.sage{border-color:var(--sage);background:var(--sage-dim);}
+.callout.rose{border-color:var(--rose);background:var(--rose-dim);}
+.callout.amber{border-color:var(--amber);background:var(--amber-dim);}
+.callout strong{color:var(--bright);font-weight:600;}
+
+.warn{background:var(--rose-dim);border:1px solid rgba(200,80,96,.2);border-radius:4px;padding:13px 16px;margin:12px 0;display:flex;gap:10px;}
+.warn-icon{color:var(--rose);flex-shrink:0;font-size:13px;margin-top:3px;}
+.warn-text{font-size:14.5px;color:var(--text);line-height:1.75;}
+.warn-text strong{color:var(--rose);font-weight:600;}
+
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:7px;margin:13px 0;}
+.cg-card{background:var(--card);border:1px solid var(--border2);border-radius:4px;overflow:hidden;}
+.cg-head{padding:8px 13px;font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;}
+.cg-head.steel{background:var(--steel-dim);color:var(--steel);border-bottom:1px solid rgba(74,157,200,.14);}
+.cg-head.gold{background:var(--gold-dim);color:var(--gold);border-bottom:1px solid rgba(200,160,64,.14);}
+.cg-head.sage{background:var(--sage-dim);color:var(--sage);border-bottom:1px solid rgba(80,168,112,.14);}
+.cg-head.rose{background:var(--rose-dim);color:var(--rose);border-bottom:1px solid rgba(200,80,96,.14);}
+.cg-head.amber{background:var(--amber-dim);color:var(--amber);border-bottom:1px solid rgba(208,136,48,.14);}
+.cg-body{padding:11px 13px;font-size:14.5px;color:var(--text);line-height:1.75;}
+.cg-body strong{color:var(--bright);}
+
+/* Delta spec table */
+.dspec{width:100%;border-collapse:collapse;margin:13px 0;}
+.dspec thead tr{border-bottom:1px solid var(--border2);}
+.dspec th{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--steel);padding:9px 14px;text-align:left;}
+.dspec td{padding:9px 14px;border-bottom:1px solid var(--border);font-size:14.5px;color:var(--text);vertical-align:middle;line-height:1.6;}
+.dspec tr:last-child td{border-bottom:none;}
+.dspec tr:hover td{background:var(--card2);}
+.dspec td:first-child{font-family:'DM Mono',monospace;font-size:12px;color:var(--bright);}
+.dspec td:nth-child(2){font-family:'DM Mono',monospace;font-size:18px;color:var(--steel);}
+.dspec td:nth-child(3){font-size:13.5px;color:var(--sub);}
+
+/* Sound table */
+.stbl{width:100%;border-collapse:collapse;margin:13px 0;}
+.stbl thead tr{border-bottom:1px solid var(--border2);}
+.stbl th{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--steel);padding:9px 14px;text-align:left;}
+.stbl td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:14.5px;color:var(--text);vertical-align:top;line-height:1.7;}
+.stbl tr:last-child td{border-bottom:none;}
+.stbl tr:hover td{background:var(--card2);}
+.stbl td:first-child{font-family:'DM Mono',monospace;font-size:12px;color:var(--steel);white-space:nowrap;}
+.stbl td strong{color:var(--bright);font-weight:600;}
+.stbl .usable{color:var(--sage);font-family:'DM Mono',monospace;font-size:10px;}
+.stbl .not-usable{color:var(--rose);font-family:'DM Mono',monospace;font-size:10px;}
+
+/* Worked example */
+.ex{background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:16px;margin:13px 0;}
+.ex-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--steel);margin-bottom:10px;}
+.ex-positions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.ex-pos{background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:6px 11px;text-align:center;}
+.ex-pos-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--sub);margin-bottom:3px;letter-spacing:1px;}
+.ex-pos-val{font-family:'DM Mono',monospace;font-size:17px;color:var(--bright);}
+.ex-pos-val.hi{color:var(--rose);}
+.ex-pos-val.lo{color:var(--steel);}
+.ex-result{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.ex-result-item{background:var(--card2);border-radius:3px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);}
+.ex-result-item strong{color:var(--gold);}
+
+/* Fault step list */
+.fstep-list{display:flex;flex-direction:column;gap:0;margin:13px 0;}
+.fstep{display:flex;gap:0;align-items:stretch;}
+.fstep-line{width:2px;background:var(--border2);flex-shrink:0;position:relative;}
+.fstep-line::before{content:'';position:absolute;top:14px;left:-5px;width:12px;height:12px;border-radius:50%;background:var(--steel);border:2px solid var(--bg);}
+.fstep.done .fstep-line::before{background:var(--sage);}
+.fstep-content{padding:2px 0 20px 18px;flex:1;}
+.fstep-num{font-family:'DM Mono',monospace;font-size:8px;color:var(--steel);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;}
+.fstep.done .fstep-num{color:var(--sage);}
+.fstep-title{font-size:14px;color:var(--bright);font-weight:600;font-family:'Cinzel',serif;letter-spacing:.3px;margin-bottom:4px;}
+.fstep-body{font-size:14.5px;color:var(--text);line-height:1.73;}
+.fstep-body strong{color:var(--bright);}
+
+/* Fault grid */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:13px 0;}
+.fg-card{background:var(--card);border:1px solid var(--border2);border-radius:4px;overflow:hidden;}
+.fg-head{padding:8px 12px;font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:7px;}
+.fg-head.rose{background:var(--rose-dim);color:var(--rose);border-bottom:1px solid rgba(200,80,96,.14);}
+.fg-head.amber{background:var(--amber-dim);color:var(--amber);border-bottom:1px solid rgba(208,136,48,.14);}
+.fg-head.steel{background:var(--steel-dim);color:var(--steel);border-bottom:1px solid rgba(74,157,200,.14);}
+.fg-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.fg-body{padding:10px 13px;font-size:14px;color:var(--text);line-height:1.73;}
+.fg-body strong{color:var(--bright);}
+
+/* Regulator pin explainer */
+.pin-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:13px 0;}
+.pin-card{background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:14px;}
+.pin-label{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.pin-label.close{color:var(--rose);}
+.pin-label.open{color:var(--sage);}
+.pin-body{font-size:14.5px;color:var(--text);line-height:1.73;}
+
+.hamburger{display:none;position:fixed;top:14px;left:14px;z-index:100;background:var(--card);border:1px solid var(--border2);border-radius:3px;padding:8px 10px;cursor:pointer;color:var(--steel);font-size:16px;}
+@media(max-width:820px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{position:fixed;left:-100%;top:0;height:100vh;width:272px;z-index:99;transition:left .25s;}
+  .sidebar.open{left:0;}
+  .hamburger{display:block;}
+  .panel{padding:22px 18px 60px;}
+  .main{padding-top:50px;}
+  .fg{grid-template-columns:1fr;}
+  .pin-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+<div class="app">
+<aside class="sidebar">
+  <div class="sb-head">
+    <div class="sb-icon"></div>
+    <div class="sb-title">Timing Machines<br>&amp; Amplitude Diagnosis</div>
+    <div class="sb-sub">Metrics · Faults · Troubleshooting</div>
+    <div class="sb-rule"></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-grp">Timing Machine Basics</div>
+    <div class="sb-item active" onclick="nav(this,'p0')"><span class="sb-n">01</span>What the Machine Measures</div>
+    <div class="sb-item" onclick="nav(this,'p1')"><span class="sb-n">02</span>Delta Rate — The Key Metric</div>
+    <div class="sb-item" onclick="nav(this,'p2')"><span class="sb-n">03</span>Amplitude Deltas</div>
+    <div class="sb-item" onclick="nav(this,'p3')"><span class="sb-n">04</span>Average Daily Rate</div>
+    <div class="sb-item" onclick="nav(this,'p4')"><span class="sb-n">05</span>How Data Is Measured</div>
+    <div class="sb-item" onclick="nav(this,'p5')"><span class="sb-n">06</span>Rate, Amplitude &amp; Beat Error</div>
+    <div class="sb-item" onclick="nav(this,'p6')"><span class="sb-n">07</span>Lift Angle</div>
+    <div class="sb-item" onclick="nav(this,'p7')"><span class="sb-n">08</span>Regulator Pin Adjustment</div>
+
+    <div class="sb-grp">Amplitude Fault Finding</div>
+    <div class="sb-item" onclick="nav(this,'p8')"><span class="sb-n">09</span>Localise First — The Method</div>
+    <div class="sb-item" onclick="nav(this,'p9')"><span class="sb-n">10</span>Pre-Checks: Demagnetise &amp; Lift Angle</div>
+    <div class="sb-item" onclick="nav(this,'p10')"><span class="sb-n">11</span>Case, Dial &amp; Hands</div>
+    <div class="sb-item" onclick="nav(this,'p11')"><span class="sb-n">12</span>Balance Area Faults</div>
+    <div class="sb-item" onclick="nav(this,'p12')"><span class="sb-n">13</span>Pivot, Hairspring &amp; Jewel Issues</div>
+    <div class="sb-item" onclick="nav(this,'p13')"><span class="sb-n">14</span>Escapement Area Faults</div>
+  </nav>
+  <div class="sb-foot"><p>Timing Machines Basics<br>Low Amplitude Fault Finding<br>Escapement Diagnosis</p></div>
+</aside>
+
+<main class="main">
+
+<!-- 01 WHAT THE MACHINE MEASURES -->
+<div class="panel active" id="p0">
+  <div class="ph">
+    <div class="ph-eye">Timing Basics · Section 01</div>
+    <h1>What the Machine <em>Measures</em></h1>
+    <p>The timing machine is the most important tool in the watchmaker's shop — a heartbeat monitor for the movement, giving an instant, objective assessment of the quality of service performed.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head steel">Rate Deviation</div><div class="cg-body">How many seconds per day the watch gains or loses relative to a reference, in each tested position. The primary indicator of how well the movement is performing.</div></div>
+    <div class="cg-card"><div class="cg-head gold">Amplitude</div><div class="cg-body">The arc in degrees through which the balance wheel swings from rest to its maximum turning point. Target range for modern wristwatches: <strong>260°–310°</strong>. The key health indicator of power delivery through the movement.</div></div>
+    <div class="cg-card"><div class="cg-head amber">Beat Error</div><div class="cg-body">The difference in time between tick→tack and tack→tick intervals. A non-zero beat error means the balance is not centred in its arc — the impulse pin is not positioned at the balance's rest point.</div></div>
+  </div>
+
+  <div class="callout"><strong>The timing machine provides an instant report card</strong> on how well inspection and service were performed. Watchmakers have a love-hate relationship with it for exactly this reason — there is nowhere to hide. Every problem inside the movement shows up in the data.</div>
+
+  <div class="sdiv"><span class="sdiv-tag">POSITIONS</span><div class="sdiv-line"></div><span class="sdiv-text">Five Standard Test Positions</span></div>
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head steel">DU</div><div class="cg-body"><strong>Dial Up</strong> — movement face up, horizontal. One of the two horizontal positions.</div></div>
+    <div class="cg-card"><div class="cg-head steel">DD</div><div class="cg-body"><strong>Dial Down</strong> — movement face down, horizontal. One of the two horizontal positions.</div></div>
+    <div class="cg-card"><div class="cg-head steel">CU</div><div class="cg-body"><strong>Crown Up</strong> — movement vertical, crown at 12 o'clock.</div></div>
+    <div class="cg-card"><div class="cg-head steel">CD</div><div class="cg-body"><strong>Crown Down</strong> — movement vertical, crown at 6 o'clock.</div></div>
+    <div class="cg-card"><div class="cg-head steel">CL</div><div class="cg-body"><strong>Crown Left</strong> — movement vertical, crown at 9 o'clock. The fifth and final standard position.</div></div>
+  </div>
+  <div class="callout gold"><strong>CR (Crown Right) is not used in standard 5-position testing.</strong> The five positions above are the industry standard set. CR is the sixth possible position and is omitted from the standard protocol.</div>
+</div>
+
+<!-- 02 DELTA RATE -->
+<div class="panel" id="p1">
+  <div class="ph">
+    <div class="ph-eye">Timing Basics · Section 02</div>
+    <h1>Delta Rate — <em>The Key Metric</em></h1>
+    <p>The delta rate is the number one metric for how well a movement is operating. It is the difference between the two most extreme rate deviations observed across all tested positions.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">DEFINITION</span><div class="sdiv-line"></div><span class="sdiv-text">What Delta Rate Means</span></div>
+  <p class="prose"><strong>Delta rate = highest rate reading − lowest rate reading</strong> across the positions tested. A rate of +8 and a rate of −5 gives a delta of 13 (not 3). The sign of each reading must be respected — the delta spans the full numerical distance between the two extremes.</p>
+
+  <div class="ex">
+    <div class="ex-label">Worked Example — Delta Rate Calculation</div>
+    <div class="ex-positions">
+      <div class="ex-pos"><div class="ex-pos-label">DU</div><div class="ex-pos-val">−1</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">DD</div><div class="ex-pos-val">+1</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">CU</div><div class="ex-pos-val">−3</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">CD</div><div class="ex-pos-val hi">+8</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">CL</div><div class="ex-pos-val lo">−5</div></div>
+    </div>
+    <div class="ex-result">
+      <div class="ex-result-item">Highest: <strong>+8</strong></div>
+      <div class="ex-result-item">Lowest: <strong>−5</strong></div>
+      <div class="ex-result-item">Delta: <strong>8 − (−5) = 13</strong></div>
+    </div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">STANDARDS</span><div class="sdiv-line"></div><span class="sdiv-text">Acceptable Delta Rates by Movement Grade</span></div>
+  <table class="dspec">
+    <thead><tr><th>Movement Grade</th><th>Max Delta</th><th>Context</th></tr></thead>
+    <tbody>
+      <tr><td>General quality</td><td>≤ 15</td><td>Standard grade production movements</td></tr>
+      <tr><td>Medium quality</td><td>≤ 10</td><td>Better grade movements, adjusted</td></tr>
+      <tr><td>Highest quality</td><td>≤ 5</td><td>Observatory-grade, fully adjusted movements</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sdiv"><span class="sdiv-tag">TYPES</span><div class="sdiv-line"></div><span class="sdiv-text">Three Delta Categories</span></div>
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head steel">Positional Delta</div><div class="cg-body">Difference between the <strong>average vertical and average horizontal</strong> rate values. Reveals whether the movement performs consistently between lying and hanging positions.</div></div>
+    <div class="cg-card"><div class="cg-head steel">Vertical Delta</div><div class="cg-body">Delta across only the <strong>vertical tested positions</strong> (CU, CD, CL). High vertical delta indicates poise problems, a bent pivot, or an out-of-flat/off-centre hairspring.</div></div>
+    <div class="cg-card"><div class="cg-head gold">Critical Delta</div><div class="cg-body">Difference between <strong>CL and DU</strong> only — the two most common real-world wearing positions. Used as a customer satisfaction metric. Closer to zero (and positive) = better.</div></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">DIAL DELTA</span><div class="sdiv-line"></div><span class="sdiv-text">DU vs. DD — The Escapement Health Check</span></div>
+  <p class="prose">The dial delta — the difference between dial-up and dial-down rates — uses a specific standard: <strong>≤ 6 seconds/day</strong> for general grade movements. A dial delta beyond 6 indicates an issue within the escapement that will make the watch difficult to regulate. When the dial delta is much beyond this, achieving a good overall delta becomes increasingly difficult.</p>
+</div>
+
+<!-- 03 AMPLITUDE DELTAS -->
+<div class="panel" id="p2">
+  <div class="ph">
+    <div class="ph-eye">Timing Basics · Section 03</div>
+    <h1><em>Amplitude</em> Deltas</h1>
+    <p>Amplitude deltas are equally important to rate deltas — a large amplitude swing between positions is a direct indicator of friction or geometry problems inside the movement.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">TARGET</span><div class="sdiv-line"></div><span class="sdiv-text">Target Amplitude Range</span></div>
+  <p class="prose">The standard target amplitude for modern wristwatches is <strong>270°–300°</strong>. This range ensures isochronism — the balance maintains a consistent rate across its amplitude range. As oils age, amplitude decreases gradually, which is one of the primary drivers for regular service intervals.</p>
+
+  <table class="dspec">
+    <thead><tr><th>Delta Type</th><th>Standard</th><th>Applies To</th></tr></thead>
+    <tbody>
+      <tr><td>Dial amplitude delta (DU vs. DD)</td><td>≤ 15°</td><td>All grades, fast beat movements</td></tr>
+      <tr><td>Horizontal to vertical drop</td><td>≤ 10%</td><td>Fast beat movements (21,600+ bph)</td></tr>
+      <tr><td>Horizontal to vertical drop</td><td>≤ 15%</td><td>Slow beat movements (18,000 bph)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>Dial amplitude delta ≤ 15°, as close to equal as possible.</strong> The forces on the balance wheel are identical in DU and DD — any significant amplitude difference between these two positions points to a problem with the regulator pins (not parallel) or something under the balance wheel.</div>
+
+  <div class="callout gold"><strong>Vertical amplitude drop.</strong> A drop of 40–50° from horizontal to vertical is not unusual in older slow-beat movements. These have many worn parts and heavy balance wheels. In fast-beat modern movements, more than 10% vertical drop indicates a problem.</div>
+
+  <div class="warn"><span class="warn-icon">⚠</span><div class="warn-text"><strong>Do not confuse amplitude delta limits:</strong> dial position amplitude variation = <strong>15°</strong>. Dial rate variation (delta) = <strong>6 sec/day</strong>. Vertical amplitude drop = <strong>10%</strong>. Three different standards for three different measurements.</div></div>
+</div>
+
+<!-- 04 AVERAGE DAILY RATE -->
+<div class="panel" id="p3">
+  <div class="ph">
+    <div class="ph-eye">Timing Basics · Section 04</div>
+    <h1>Average <em>Daily Rate</em></h1>
+    <p>The ADR (Average Daily Rate), also called the "Means Rate," represents how accurately a watch keeps time over 24 hours — accounting for all tested positions proportionally.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <p class="prose">The ADR is the sum of all the rate readings across tested positions, divided by the number of positions. It gives a single number representing the watch's net daily gain or loss when worn through all positions during a normal day.</p>
+
+  <div class="ex">
+    <div class="ex-label">Simple Example — ADR</div>
+    <div class="ex-positions">
+      <div class="ex-pos"><div class="ex-pos-label">Position A</div><div class="ex-pos-val lo">−5</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">Position B</div><div class="ex-pos-val hi">+5</div></div>
+    </div>
+    <div class="ex-result">
+      <div class="ex-result-item">ADR = (−5 + 5) ÷ 2 = <strong>0 sec/day</strong></div>
+    </div>
+  </div>
+
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head steel">Average Vertical Rate</div><div class="cg-body">The mean of all vertical position rate readings (CU, CD, CL). Used to compare against the horizontal average and to calculate the positional delta.</div></div>
+    <div class="cg-card"><div class="cg-head steel">Average Horizontal Rate</div><div class="cg-body">The mean of dial-up and dial-down rate readings. Combined with the vertical average to give a complete picture of how the movement performs across all orientations.</div></div>
+  </div>
+
+  <div class="callout gold"><strong>The ADR is not the same as the delta rate.</strong> A watch could have an ADR of 0 (perfect average) with a delta of 16 (terrible consistency) — one position running fast cancels out another running slow. Both metrics are needed: ADR for net accuracy, delta for positional consistency.</div>
+</div>
+
+<!-- 05 HOW DATA IS MEASURED -->
+<div class="panel" id="p4">
+  <div class="ph">
+    <div class="ph-eye">Timing Basics · Section 05</div>
+    <h1>How Data <em>Is Measured</em></h1>
+    <p>The Swiss lever escapement produces three distinct acoustic events per beat cycle. The timing machine discriminates between them — using only the two that are precise enough for measurement.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <table class="stbl">
+    <thead><tr><th>Sound</th><th>Source</th><th>Regularity</th><th>Used For</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1st Sound</td>
+        <td>The impulse pin of the roller impacts the corner of the pallet slot</td>
+        <td class="usable">PRECISE</td>
+        <td><strong>Rate deviation and beat error calculation.</strong> The most reliable and consistent of the three sounds — used for graph recording and all timing calculations.</td>
+      </tr>
+      <tr>
+        <td>2nd Sound</td>
+        <td>An escape wheel tooth engages with the impulse area of a pallet stone and the fork contacts the impulse pin</td>
+        <td class="not-usable">IRREGULAR</td>
+        <td><strong>Not used.</strong> Too irregular for evaluation. Cannot be relied upon for any timing measurement.</td>
+      </tr>
+      <tr>
+        <td>3rd Sound</td>
+        <td>An escape wheel tooth meets and slides down the locking plane of a pallet stone; the lever hits the banking pin</td>
+        <td class="usable">STRONG &amp; USABLE</td>
+        <td><strong>Amplitude calculation.</strong> The most powerful of the three sounds. The time interval between the 1st and 3rd sounds is the measurement used to calculate amplitude.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>Only the 1st and 3rd sounds are used for measurement.</strong> The 2nd sound is inherently irregular and is disregarded entirely by the timing machine's analysis. This is why amplitude is calculated from the 1st-to-3rd pulse interval — not from just one sound.</div>
+</div>
+
+<!-- 06 RATE, AMPLITUDE & BEAT ERROR -->
+<div class="panel" id="p5">
+  <div class="ph">
+    <div class="ph-eye">Timing Basics · Section 06</div>
+    <h1>Rate, Amplitude <em>&amp; Beat Error</em></h1>
+    <p>Understanding how each metric is calculated clarifies what the machine is actually measuring — and why entering the wrong lift angle corrupts the amplitude reading.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">RATE</span><div class="sdiv-line"></div><span class="sdiv-text">How Rate Deviation Is Calculated</span></div>
+  <p class="prose">The differences between each measured beat period and the nominal (correct) period are averaged over the measuring time. These averages are converted into seconds per 24 hours. The plotted diagram on the machine shows the technical condition of the movement and flags any faults visible in the trace pattern.</p>
+
+  <div class="sdiv"><span class="sdiv-tag">AMPLITUDE</span><div class="sdiv-line"></div><span class="sdiv-text">How Amplitude Is Calculated</span></div>
+  <p class="prose">The time between the <strong>1st pulse and the 3rd pulse</strong> of the beat noise is measured. During this interval the balance wheel rotates through a specific angle — the <em>lift angle</em>, which is determined by the construction of the movement and entered as a parameter into the machine.</p>
+  <p class="prose">The relationship is inverse: <strong>larger amplitude = faster balance wheel speed through the lift angle = shorter time interval</strong> between the 1st and 3rd pulses. The machine converts this timing into degrees of arc using the entered lift angle.</p>
+
+  <div class="sdiv"><span class="sdiv-tag">BEAT ERROR</span><div class="sdiv-line"></div><span class="sdiv-text">What Beat Error Represents</span></div>
+  <p class="prose">In a watch with zero beat error, the period from tick to tack is identical to the period from tack to tick. A beat error exists when these two half-cycles are unequal — meaning the balance wheel's rest position is not at the centre of its arc. The time difference is averaged over the measuring time and displayed in milliseconds.</p>
+</div>
+
+<!-- 07 LIFT ANGLE -->
+<div class="panel" id="p6">
+  <div class="ph">
+    <div class="ph-eye">Timing Basics · Section 07</div>
+    <h1><em>Lift Angle</em></h1>
+    <p>The lift angle is a construction parameter specific to each movement — it must be entered correctly into the timing machine, or the amplitude reading will be wrong. Guessing or assuming is not acceptable.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <p class="prose">The lift angle is the angular range through which the impulse pin (ellipse) remains in contact with the pallet fork during each impulse — the arc over which energy is transferred from the escapement to the balance wheel. It is determined entirely by the geometry of the specific movement design.</p>
+
+  <div class="callout rose"><strong>Never assume the lift angle is 52° or 53°.</strong> This is described as lazy. Each degree of error in the lift angle equals approximately 5° of error in the displayed amplitude. Being off by 4° gives a false amplitude reading of ±20° — enough to misdiagnose a perfectly healthy movement or miss a genuine problem.</div>
+
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head steel">Modern Wristwatches</div><div class="cg-body">Most modern Swiss lever wristwatch movements have lift angles in the range of 50°–53°. Always verify against the technical sheet for the specific calibre, not a generic assumption.</div></div>
+    <div class="cg-card"><div class="cg-head gold">Pocket Watches</div><div class="cg-body">Many pocket watches have lift angles going down into the <strong>low 40s</strong>. Using a wristwatch lift angle on a pocket watch would produce a significantly inflated amplitude reading — masking potential problems.</div></div>
+    <div class="cg-card"><div class="cg-head amber">Source of Lift Angle Data</div><div class="cg-body">Use the manufacturer's technical sheet for the specific calibre. Don't rely on random internet sources. If the sheet is unavailable, use a reputable calibre database — and flag the uncertainty in the result.</div></div>
+  </div>
+</div>
+
+<!-- 08 REGULATOR PIN ADJUSTMENT -->
+<div class="panel" id="p7">
+  <div class="ph">
+    <div class="ph-eye">Timing Basics · Section 08</div>
+    <h1>Regulator Pin <em>Adjustment</em></h1>
+    <p>When dial and vertical rates differ significantly, adjusting the spacing of the regulator pins changes the effective hairspring length in vertical positions, bringing the rates closer together.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <p class="prose">The regulator pins (curb pins) straddle the hairspring near the outer coil. When the watch is horizontal, the hairspring lies flat and the effective length between the pins and the collet determines the rate. When the watch is vertical, gravity causes the coils to sag slightly — the pins engage slightly differently, changing the effective length and therefore the rate. If the pins are not parallel to each other, this effect varies between vertical positions.</p>
+
+  <div class="sdiv"><span class="sdiv-tag">LOGIC</span><div class="sdiv-line"></div><span class="sdiv-text">Which Direction to Adjust</span></div>
+  <div class="pin-grid">
+    <div class="pin-card">
+      <div class="pin-label close">Close the Pins</div>
+      <div class="pin-body">Closing the pins shortens the active hairspring length in vertical positions — making the vertical rates <strong>faster (more positive)</strong>.<br><br><strong>Use when:</strong> vertical rates are slower (more negative) than dial rates. Need to bring verticals up.</div>
+    </div>
+    <div class="pin-card">
+      <div class="pin-label open">Open the Pins</div>
+      <div class="pin-body">Opening the pins lengthens the active hairspring in vertical positions — making the vertical rates <strong>slower (more negative)</strong>.<br><br><strong>Use when:</strong> vertical rates are faster (more positive) than dial rates. Need to bring verticals down.</div>
+    </div>
+  </div>
+
+  <div class="ex">
+    <div class="ex-label">Worked Example — Which Direction?</div>
+    <div class="ex-positions">
+      <div class="ex-pos"><div class="ex-pos-label">DU</div><div class="ex-pos-val">+3</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">DD</div><div class="ex-pos-val">−1</div></div>
+      <div class="ex-pos" style="opacity:.4"><div class="ex-pos-label">─</div><div class="ex-pos-val" style="font-size:12px">Dial avg</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">CU</div><div class="ex-pos-val lo">−4</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">CD</div><div class="ex-pos-val">+4</div></div>
+      <div class="ex-pos"><div class="ex-pos-label">CL</div><div class="ex-pos-val lo">−8</div></div>
+    </div>
+    <div class="ex-result">
+      <div class="ex-result-item">Dial average: <strong>+1</strong></div>
+      <div class="ex-result-item">Vertical average: <strong>−2.7</strong></div>
+      <div class="ex-result-item">Verticals slower → <strong>Close the pins</strong></div>
+    </div>
+  </div>
+
+  <div class="callout"><strong>Regulator pin adjustment changes the vertical-to-horizontal relationship.</strong> It does not independently change the dial rate — for overall rate adjustment, the regulator (index lever) is moved. The pins address the positional delta; the regulator addresses the mean rate.</div>
+</div>
+
+<!-- 09 LOCALISE FIRST -->
+<div class="panel" id="p8">
+  <div class="ph">
+    <div class="ph-eye">Amplitude Faults · Section 09</div>
+    <h1>Localise First — <em>The Method</em></h1>
+    <p>When amplitude is below the 270° minimum after service, the correct approach is methodical isolation — starting from the outside in, removing parts progressively until amplitude returns.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="callout rose"><strong>The most important reason not to fully assemble a watch before checking amplitude:</strong> if a fault exists, you will have to disassemble everything you just assembled to find it. Only install enough parts to operate the balance — verify amplitude at each stage before adding more.</div>
+
+  <p class="prose">The fault-finding sequence works from outside the movement inward — case first, then dial and hands, then cannon pinion, then balance area, then escapement. Each step either confirms a fault or eliminates that system as the cause.</p>
+
+  <div class="fstep-list">
+    <div class="fstep"><div class="fstep-line"></div><div class="fstep-content"><div class="fstep-num">STEP 1</div><div class="fstep-title">Check Amplitude with Movement in Case</div><div class="fstep-body">If amplitude is low in the fully cased watch, start here before any disassembly.</div></div></div>
+    <div class="fstep"><div class="fstep-line"></div><div class="fstep-content"><div class="fstep-num">STEP 2</div><div class="fstep-title">Remove from Case — Recheck</div><div class="fstep-body">If amplitude returns to normal, the fault is <strong>case-related</strong>. See Section 10 for common causes.</div></div></div>
+    <div class="fstep"><div class="fstep-line"></div><div class="fstep-content"><div class="fstep-num">STEP 3</div><div class="fstep-title">Remove Hands and Dial — Recheck</div><div class="fstep-body">If amplitude returns, the fault is in <strong>the dial or hand installation</strong>. See Section 10.</div></div></div>
+    <div class="fstep"><div class="fstep-line"></div><div class="fstep-content"><div class="fstep-num">STEP 4</div><div class="fstep-title">Remove Cannon Pinion — Recheck</div><div class="fstep-body">If amplitude returns, the <strong>cannon pinion</strong> is causing friction. See cannon pinion tightening section.</div></div></div>
+    <div class="fstep"><div class="fstep-line"></div><div class="fstep-content"><div class="fstep-num">STEP 5</div><div class="fstep-title">Inspect Balance Area</div><div class="fstep-body">Fault is now on the <strong>movement side</strong>. Work through balance checks in Section 12 — pivots, hairspring, jewels, shock springs, end shake.</div></div></div>
+    <div class="fstep done"><div class="fstep-line"></div><div class="fstep-content"><div class="fstep-num">STEP 6</div><div class="fstep-title">Inspect Escapement Area</div><div class="fstep-body">If balance area is clear, proceed to escapement checks — pallet stones, pallet fork wear, banking pins, impulse pin. See Section 14.</div></div></div>
+  </div>
+</div>
+
+<!-- 10 PRE-CHECKS -->
+<div class="panel" id="p9">
+  <div class="ph">
+    <div class="ph-eye">Amplitude Faults · Section 10</div>
+    <h1>Pre-Checks: Demagnetise <em>&amp; Lift Angle</em></h1>
+    <p>Two checks should always happen before amplitude fault-finding begins — one is often forgotten, the other is often assumed incorrectly.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="fg">
+    <div class="fg-card"><div class="fg-head rose"><div class="fg-dot"></div>Demagnetise the Movement</div><div class="fg-body">The movement should be demagnetised before going on the timing machine — but this step is sometimes forgotten. When parts must overcome magnetic forces inside the movement, <strong>more energy is drawn from the mainspring</strong> just to turn the train. This reduces amplitude. Always demagnetise before testing, not after a problem is found.</div></div>
+    <div class="fg-card"><div class="fg-head amber"><div class="fg-dot"></div>Confirm the Correct Lift Angle</div><div class="fg-body">A wrong lift angle entered into the timing machine gives a false amplitude reading. Being off by 1° is not critical — but being off by 4° equals approximately 20° of false amplitude. <strong>Many pocket watches have lift angles in the low 40s</strong> — assuming 52° for one would show a significantly inflated reading. Always verify from the manufacturer's data.</div></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">CASE</span><div class="sdiv-line"></div><span class="sdiv-text">Common Case-Related Amplitude Causes</span></div>
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head rose">Second Hand Contact</div><div class="cg-body">The second hand hitting the underside of the crystal. The hand rides higher than the crystal clearance allows — often after a crystal change or hand reinstallation at incorrect depth.</div></div>
+    <div class="cg-card"><div class="cg-head rose">Dial Pressure</div><div class="cg-body">The dial not sitting flat, causing the case back to press on the movement. A thicker replacement movement ring, or a forgotten ring, can press the dial into the calendar works.</div></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">HANDS &amp; DIAL</span><div class="sdiv-line"></div><span class="sdiv-text">Common Dial-Side Amplitude Causes</span></div>
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head rose">Hour Hand Pressed Too Deep</div><div class="cg-body">The hour hand touching the top of the dial. Check spacing visually first — then remove the hour hand and inspect whether the cannon pinion is properly centred in the dial hole.</div></div>
+    <div class="cg-card"><div class="cg-head rose">Off-Centre Dial Hole</div><div class="cg-body">If the hour wheel is not centred in the dial hole, the hour hand pipe contacts the edge of the hole as the hand rotates, creating intermittent friction that reduces amplitude.</div></div>
+  </div>
+</div>
+
+<!-- 11 CASE DIAL HANDS (redirect already covered above, use for deeper content) -->
+<div class="panel" id="p10">
+  <div class="ph">
+    <div class="ph-eye">Amplitude Faults · Section 11</div>
+    <h1>Case, Dial <em>&amp; Hands</em></h1>
+    <p>Case and dial-side faults account for a significant share of post-service amplitude complaints. These are eliminated first because they require the least disassembly and most are visible on inspection.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">PROCESS</span><div class="sdiv-line"></div><span class="sdiv-text">Systematic Outer-Layer Isolation</span></div>
+  <p class="prose">Remove the movement from the case and recheck amplitude immediately. If amplitude returns to the correct level, the fault is entirely case-related — inspect the second hand clearance, case back fit, and movement ring thickness before recasing.</p>
+  <p class="prose">If the fault persists outside the case, remove the hands and dial and recheck again. If amplitude then returns, the fault is in how the hands or dial are installed:</p>
+
+  <div class="step-list" style="display:flex;flex-direction:column;gap:6px;margin:13px 0;">
+    <div style="display:flex;gap:14px;background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:12px 16px;align-items:flex-start;">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--steel);min-width:22px;margin-top:3px;flex-shrink:0;">1</div>
+      <div><div style="font-size:12px;color:var(--bright);font-weight:600;margin-bottom:4px;font-family:'Cinzel',serif;letter-spacing:.3px;">Check Hour Hand Depth</div><div style="font-size:14.5px;color:var(--text);line-height:1.75;">Inspect whether the hour hand has been pushed down to touch the top of the dial. If spacing looks correct, remove the hour hand and check the pipe centring over the hour wheel.</div></div>
+    </div>
+    <div style="display:flex;gap:14px;background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:12px 16px;align-items:flex-start;">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--steel);min-width:22px;margin-top:3px;flex-shrink:0;">2</div>
+      <div><div style="font-size:12px;color:var(--bright);font-weight:600;margin-bottom:4px;font-family:'Cinzel',serif;letter-spacing:.3px;">Check Dial Centring</div><div style="font-size:14.5px;color:var(--text);line-height:1.75;">If the hour wheel is not centred in the dial hole, the hour hand pipe contacts the edge as it rotates. This creates friction at every rotation — subtle, intermittent, and easy to miss. Remove the dial to confirm.</div></div>
+    </div>
+    <div style="display:flex;gap:14px;background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:12px 16px;align-items:flex-start;">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--steel);min-width:22px;margin-top:3px;flex-shrink:0;">3</div>
+      <div><div style="font-size:12px;color:var(--bright);font-weight:600;margin-bottom:4px;font-family:'Cinzel',serif;letter-spacing:.3px;">Check Cannon Pinion Separately</div><div style="font-size:14.5px;color:var(--text);line-height:1.75;">Even after the dial is removed, the cannon pinion remains. Remove it next and recheck. If amplitude returns, the cannon pinion was causing friction on the centre wheel arbor — it needs tightening or the fit needs to be checked.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 BALANCE AREA FAULTS -->
+<div class="panel" id="p11">
+  <div class="ph">
+    <div class="ph-eye">Amplitude Faults · Section 12</div>
+    <h1>Balance Area <em>Faults</em></h1>
+    <p>With case, dial, and cannon pinion eliminated, the fault is in the movement itself. The balance area has eight distinct fault types — each with its own signature.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="fg">
+    <div class="fg-card"><div class="fg-head rose"><div class="fg-dot"></div>3.1 Pivot Defects</div><div class="fg-body"><strong>Sideshake:</strong> excessive lateral pivot movement causes erratic balance oscillations.<br><br><strong>Wear:</strong> worn pivot surfaces increase friction, reducing energy transfer and amplitude.<br><br><strong>Bent pivot:</strong> the most common issue — even a slight bend causes the pivot to rub the wall of the balance jewel hole. Test: remove the pallet fork, reinstall the balance, start oscillating with a blower, and time how long it runs in both positions. One side stopping abruptly indicates a bent pivot.</div></div>
+    <div class="fg-card"><div class="fg-head rose"><div class="fg-dot"></div>3.2 Hairspring Issues</div><div class="fg-body"><strong>Off-centre:</strong> uneven tension on the balance → irregular oscillations → reduced amplitude.<br><br><strong>Not flat:</strong> coils touching the balance cock or train wheel → friction → impeded oscillation.<br><br><strong>Coils touching:</strong> disrupts smooth balance motion, shortens effective hairspring length, causes significant rate errors on top of amplitude loss.</div></div>
+    <div class="fg-card"><div class="fg-head amber"><div class="fg-dot"></div>3.3 Balance Jewel Issues</div><div class="fg-body"><strong>Lack of oil (9010):</strong> increased friction, reduced amplitude.<br><br><strong>Excess oil:</strong> attracts dust, increases friction, reduces amplitude.<br><br><strong>Dirty jewels:</strong> contamination impedes pivot rotation.<br><br><strong>Wear:</strong> worn pivot tips create flattened surfaces — most noticeable as difference between dial and amplitude rates.</div></div>
+    <div class="fg-card"><div class="fg-head amber"><div class="fg-dot"></div>3.4 Shock Springs</div><div class="fg-body">Stressed or improperly engaged springs fail to support the endstone correctly → excessive vibration → reduced amplitude. In severe cases: risk of damage to balance staff or jewels. An improperly seated spring in the chaton is a common overlooked cause.</div></div>
+    <div class="fg-card"><div class="fg-head rose"><div class="fg-dot"></div>3.5 Cap Jewel (Endstone) Issues</div><div class="fg-body"><strong>Pitted endstone:</strong> uneven friction on the pivot tip → restricted oscillation in one position → amplitude lower in one dial position specifically.<br><br><strong>Tilted cap jewel:</strong> intermittent amplitude variations — the watch may run normally then suddenly drop amplitude. Amplitude will vary between DU and DD.</div></div>
+    <div class="fg-card"><div class="fg-head amber"><div class="fg-dot"></div>3.6 Damaged Jewel Settings</div><div class="fg-body">Cracks or burrs in the pivot hole area catch the pivot as it rotates → increased friction. Most noticeable in <strong>vertical (hanging) positions</strong>, where the pivot rotates against the damaged side of the hole.</div></div>
+    <div class="fg-card"><div class="fg-head rose"><div class="fg-dot"></div>3.7 Balance End Shake</div><div class="fg-body"><strong>Too little:</strong> pivot squeezed between endstones → increased friction → reduced amplitude.<br><br><strong>Too much:</strong> conical pivot tip rides on the metal jewel setting rather than the endstone → high friction.<br><br>Both conditions cause amplitude inconsistency — seen as amplitude oscillating up and down rather than holding steady.</div></div>
+    <div class="fg-card"><div class="fg-head steel"><div class="fg-dot"></div>3.8–3.11 Other Balance Causes</div><div class="fg-body"><strong>Lint/dirt:</strong> any contamination anywhere in the balance or escapement area increases friction.<br><br><strong>Parts clearance (divisions):</strong> guard pin bent down, rubbing on the plate — a common and easily missed cause.<br><br><strong>Regulator pins not parallel:</strong> balance spring rides differently between positions, shortening the effective hairspring in one orientation.</div></div>
+  </div>
+</div>
+
+<!-- 13 PIVOT, HAIRSPRING & JEWEL -->
+<div class="panel" id="p12">
+  <div class="ph">
+    <div class="ph-eye">Amplitude Faults · Section 13</div>
+    <h1>Pivot, Hairspring <em>&amp; Jewel Diagnosis</em></h1>
+    <p>These three components account for the majority of balance-area amplitude faults. Each has a specific test method.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">BENT PIVOT</span><div class="sdiv-line"></div><span class="sdiv-text">The Free Rotation Test</span></div>
+  <p class="prose">The balance jewel hole sideshake tolerance is so small that even a slightly bent pivot rubs the wall of the jewel hole, creating friction. The test is straightforward:</p>
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head steel">Procedure</div><div class="cg-body">Remove the pallet fork. Reinstall the balance. Start it oscillating with a blower. <strong>Time how long it runs</strong> — then check in both positions (DU and DD). A significantly shorter run time in one position, or an abrupt stop, is a clear sign of a bent pivot.</div></div>
+    <div class="cg-card"><div class="cg-head gold">What to Look For</div><div class="cg-body">Both positions should produce approximately equal run times. One position stopping much sooner than the other — especially an abrupt stop rather than a slow wind-down — is the bent pivot signature.</div></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">HAIRSPRING</span><div class="sdiv-line"></div><span class="sdiv-text">Hairspring Fault Signatures</span></div>
+  <div class="cg">
+    <div class="cg-card"><div class="cg-head rose">Off-Centre</div><div class="cg-body">High <strong>vertical delta rate</strong> — the spring exerts uneven tension as orientation changes. The movement may regulate well in horizontal positions but run fast or slow in every vertical position.</div></div>
+    <div class="cg-card"><div class="cg-head rose">Not Flat / Touching</div><div class="cg-body">Reduced amplitude — a coil catching on the cock or a wheel creates sudden friction. May be intermittent. Inspect by watching the hairspring through the full oscillation range.</div></div>
+    <div class="cg-card"><div class="cg-head rose">Coils Touching</div><div class="cg-body">Significant amplitude loss. The effective hairspring length shortens each time coils stick together, also causing rate variations that are difficult to regulate out.</div></div>
+  </div>
+
+  <div class="sdiv"><span class="sdiv-tag">JEWELS</span><div class="sdiv-line"></div><span class="sdiv-text">Balance Jewel Oil — The Correct Standard</span></div>
+  <div class="callout gold"><strong>Balance jewels are lubricated with 9010 oil.</strong> The quantity is critical — too little: friction and low amplitude. Too much: the oil attracts contamination, which also increases friction and lowers amplitude. Either extreme produces the same symptom. The quantity must be exactly right, applied only to the endstone.</div>
+</div>
+
+<!-- 14 ESCAPEMENT FAULTS -->
+<div class="panel" id="p13">
+  <div class="ph">
+    <div class="ph-eye">Amplitude Faults · Section 14</div>
+    <h1>Escapement Area <em>Faults</em></h1>
+    <p>If all balance-area checks are clear, the fault is in the escapement. Four distinct escapement problems can cause significant amplitude loss.</p>
+    <div class="ph-rule"></div>
+  </div>
+
+  <div class="fg">
+    <div class="fg-card"><div class="fg-head rose"><div class="fg-dot"></div>4.1 Pallet Stone Settings</div><div class="fg-body">Pallet stones set too deep or too shallow alter the geometry of locking and impulse. Incorrect depth changes how much of the escape wheel tooth's energy is transferred to the pallet fork vs. lost to friction. Dropping onto the impulse plane incorrectly wastes energy that should drive the balance.</div></div>
+    <div class="fg-card"><div class="fg-head rose"><div class="fg-dot"></div>4.2 Pallet Fork Wear</div><div class="fg-body">On high-beat movements, wear at the pallet fork's point of contact with the solid banking (milled into the plate or pallet bridge) can cause <strong>significant amplitude loss</strong>. The banking stops the fork with less precision, the run-to-banking varies, and energy is lost. Inspect the banking contact surface on the pallet fork carefully.</div></div>
+    <div class="fg-card"><div class="fg-head amber"><div class="fg-dot"></div>4.3 Banking Pins Not Perpendicular</div><div class="fg-body">If banking pins are not perpendicular to the main plate, the run-to-banking (the distance between drop and banking contact) varies between the two sides. Variable run-to-banking = variable energy loss = amplitude loss. Most common on movements with <strong>adjustable banking pins</strong> — correct by turning the eccentric screw or carefully bending the pin back.</div></div>
+    <div class="fg-card"><div class="fg-head rose"><div class="fg-dot"></div>4.4 Impulse Pin Too Small</div><div class="fg-body">If a replacement impulse jewel is undersized for the pallet fork slot, the pin travels through the slot without full contact — energy transfer is incomplete. The result is amplitude loss proportional to the size mismatch. Always size-verify a replacement impulse jewel before installation.</div></div>
+    <div class="fg-card"><div class="fg-head steel"><div class="fg-dot"></div>4.5 End Shake Variation</div><div class="fg-body">A variation in end shake between the escape wheel and the pallet fork causes inconsistent geometry through the power cycle. The escapement does not function identically on each beat, producing variable energy delivery to the balance and therefore variable amplitude.</div></div>
+  </div>
+
+  <div class="callout"><strong>Escapement faults are reached last in the diagnostic sequence</strong> — only after all case, dial, hand, cannon pinion, and balance-area possibilities have been eliminated. Most amplitude problems are found well before reaching the escapement. When the escapement is the cause, the fault is usually visible on close inspection of the pallet stones and banking surfaces.</div>
+</div>
+
+</main>
+</div>
+<script>
+function nav(el,id){
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  if(window.innerWidth<=820)document.querySelector('.sidebar').classList.remove('open');
+  document.querySelector('.main').scrollTop=0;
+}
+</script>
+</body>
+</html>
